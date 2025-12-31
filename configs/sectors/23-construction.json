@@ -1,0 +1,281 @@
+{
+  "naicsCode": "23",
+  "name": "Construction Industry Configuration",
+  "description": "Configuration for construction companies including general contractors and specialty trades",
+  "version": "1.0",
+  "extendsTemplate": "PROJECT_BASED",
+  "pipelines": [
+    {
+      "name": "Construction Sales Pipeline",
+      "pipelineType": "SALES",
+      "isDefault": true,
+      "stages": [
+        { "name": "Lead", "sortOrder": 1, "probability": 10, "isInitial": true, "color": "#6366f1" },
+        { "name": "Site Visit Scheduled", "sortOrder": 2, "probability": 20, "color": "#8b5cf6" },
+        { "name": "Estimate Prepared", "sortOrder": 3, "probability": 40, "color": "#a855f7" },
+        { "name": "Proposal Sent", "sortOrder": 4, "probability": 50, "color": "#d946ef" },
+        { "name": "Negotiation", "sortOrder": 5, "probability": 70, "color": "#ec4899" },
+        { "name": "Contract Signed", "sortOrder": 6, "probability": 90, "color": "#f43f5e" },
+        { "name": "In Production", "sortOrder": 7, "probability": 95, "color": "#22c55e" },
+        { "name": "Completed", "sortOrder": 8, "probability": 100, "isFinal": true, "isWon": true, "color": "#10b981" },
+        { "name": "Lost", "sortOrder": 9, "isFinal": true, "isLost": true, "color": "#ef4444" }
+      ]
+    },
+    {
+      "name": "Project Pipeline",
+      "pipelineType": "PROJECT",
+      "stages": [
+        { "name": "Planning", "sortOrder": 1, "isInitial": true, "color": "#3b82f6" },
+        { "name": "Permits", "sortOrder": 2, "color": "#6366f1" },
+        { "name": "Materials Ordered", "sortOrder": 3, "color": "#8b5cf6" },
+        { "name": "In Progress", "sortOrder": 4, "color": "#22c55e" },
+        { "name": "Inspection", "sortOrder": 5, "color": "#f59e0b" },
+        { "name": "Punch List", "sortOrder": 6, "color": "#f97316" },
+        { "name": "Complete", "sortOrder": 7, "isFinal": true, "color": "#10b981" }
+      ]
+    }
+  ],
+  "customFields": [
+    {
+      "fieldKey": "project_type",
+      "label": "Project Type",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "isRequired": true,
+      "isFilterable": true,
+      "options": [
+        { "value": "new_construction", "label": "New Construction" },
+        { "value": "renovation", "label": "Renovation" },
+        { "value": "repair", "label": "Repair" },
+        { "value": "maintenance", "label": "Maintenance" },
+        { "value": "addition", "label": "Addition" }
+      ]
+    },
+    {
+      "fieldKey": "property_type",
+      "label": "Property Type",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "isRequired": true,
+      "isFilterable": true,
+      "options": [
+        { "value": "residential", "label": "Residential" },
+        { "value": "commercial", "label": "Commercial" },
+        { "value": "industrial", "label": "Industrial" },
+        { "value": "government", "label": "Government" },
+        { "value": "mixed_use", "label": "Mixed Use" }
+      ]
+    },
+    {
+      "fieldKey": "job_site_address",
+      "label": "Job Site Address",
+      "fieldType": "ADDRESS",
+      "entityType": "OPPORTUNITY",
+      "isRequired": true
+    },
+    {
+      "fieldKey": "estimated_start_date",
+      "label": "Estimated Start Date",
+      "fieldType": "DATE",
+      "entityType": "OPPORTUNITY",
+      "isFilterable": true
+    },
+    {
+      "fieldKey": "estimated_end_date",
+      "label": "Estimated End Date",
+      "fieldType": "DATE",
+      "entityType": "OPPORTUNITY",
+      "isFilterable": true
+    },
+    {
+      "fieldKey": "estimated_duration_days",
+      "label": "Estimated Duration (Days)",
+      "fieldType": "NUMBER",
+      "entityType": "OPPORTUNITY"
+    },
+    {
+      "fieldKey": "permit_required",
+      "label": "Permit Required",
+      "fieldType": "BOOLEAN",
+      "entityType": "OPPORTUNITY",
+      "defaultValue": "true"
+    },
+    {
+      "fieldKey": "permit_number",
+      "label": "Permit Number",
+      "fieldType": "TEXT",
+      "entityType": "OPPORTUNITY",
+      "isSearchable": true
+    },
+    {
+      "fieldKey": "contract_type",
+      "label": "Contract Type",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "options": [
+        { "value": "fixed_price", "label": "Fixed Price" },
+        { "value": "time_materials", "label": "Time & Materials" },
+        { "value": "cost_plus", "label": "Cost Plus" },
+        { "value": "unit_price", "label": "Unit Price" }
+      ]
+    },
+    {
+      "fieldKey": "lead_source",
+      "label": "Lead Source",
+      "fieldType": "SELECT",
+      "entityType": "CONTACT",
+      "isFilterable": true,
+      "options": [
+        { "value": "referral", "label": "Referral" },
+        { "value": "website", "label": "Website" },
+        { "value": "google", "label": "Google" },
+        { "value": "home_advisor", "label": "HomeAdvisor" },
+        { "value": "angi", "label": "Angi" },
+        { "value": "social_media", "label": "Social Media" },
+        { "value": "repeat_customer", "label": "Repeat Customer" },
+        { "value": "drive_by", "label": "Drive By" },
+        { "value": "other", "label": "Other" }
+      ]
+    }
+  ],
+  "activityTypes": [
+    {
+      "activityKey": "site_visit",
+      "name": "Site Visit",
+      "category": "SITE_VISIT",
+      "durationDefault": 60,
+      "requiresLocation": true,
+      "icon": "map-pin",
+      "color": "#3b82f6"
+    },
+    {
+      "activityKey": "estimate_preparation",
+      "name": "Estimate Preparation",
+      "category": "TASK",
+      "durationDefault": 120,
+      "icon": "calculator",
+      "color": "#8b5cf6"
+    },
+    {
+      "activityKey": "permit_submission",
+      "name": "Permit Submission",
+      "category": "TASK",
+      "icon": "file-text",
+      "color": "#f59e0b"
+    },
+    {
+      "activityKey": "inspection",
+      "name": "Inspection",
+      "category": "INSPECTION",
+      "requiresLocation": true,
+      "durationDefault": 60,
+      "icon": "clipboard-check",
+      "color": "#22c55e"
+    },
+    {
+      "activityKey": "safety_meeting",
+      "name": "Safety Meeting",
+      "category": "MEETING",
+      "durationDefault": 30,
+      "icon": "shield",
+      "color": "#ef4444"
+    },
+    {
+      "activityKey": "material_delivery",
+      "name": "Material Delivery",
+      "category": "TASK",
+      "requiresLocation": true,
+      "icon": "truck",
+      "color": "#6366f1"
+    },
+    {
+      "activityKey": "progress_photo",
+      "name": "Progress Photo",
+      "category": "DOCUMENT",
+      "requiresLocation": true,
+      "icon": "camera",
+      "color": "#ec4899"
+    }
+  ],
+  "documentTemplates": [
+    {
+      "templateKey": "construction_proposal",
+      "name": "Construction Proposal",
+      "templateType": "PROPOSAL",
+      "isDefault": true
+    },
+    {
+      "templateKey": "construction_contract",
+      "name": "Construction Contract",
+      "templateType": "CONTRACT"
+    },
+    {
+      "templateKey": "change_order",
+      "name": "Change Order",
+      "templateType": "CONTRACT"
+    },
+    {
+      "templateKey": "completion_certificate",
+      "name": "Certificate of Completion",
+      "templateType": "CERTIFICATE"
+    },
+    {
+      "templateKey": "lien_waiver",
+      "name": "Lien Waiver",
+      "templateType": "AGREEMENT"
+    }
+  ],
+  "integrations": [
+    {
+      "integrationKey": "weather_api",
+      "name": "Weather Integration",
+      "integrationType": "WEATHER",
+      "description": "Get weather forecasts for job sites"
+    },
+    {
+      "integrationKey": "permit_tracking",
+      "name": "Permit Tracking",
+      "integrationType": "INDUSTRY_DATA",
+      "description": "Track permit status with local jurisdictions"
+    },
+    {
+      "integrationKey": "supplier_pricing",
+      "name": "Supplier Pricing",
+      "integrationType": "MATERIAL_SUPPLIER",
+      "description": "Get real-time material pricing from suppliers"
+    }
+  ],
+  "modules": [
+    {
+      "moduleKey": "job_costing",
+      "name": "Job Costing",
+      "description": "Track costs, labor, and materials per job",
+      "isEnabled": true,
+      "isRequired": true
+    },
+    {
+      "moduleKey": "crew_scheduling",
+      "name": "Crew Scheduling",
+      "description": "Schedule and assign crews to jobs",
+      "isEnabled": true
+    },
+    {
+      "moduleKey": "material_tracking",
+      "name": "Material Tracking",
+      "description": "Track materials, orders, and inventory",
+      "isEnabled": true
+    },
+    {
+      "moduleKey": "equipment_tracking",
+      "name": "Equipment Tracking",
+      "description": "Track equipment usage and maintenance",
+      "isEnabled": false
+    },
+    {
+      "moduleKey": "subcontractor_management",
+      "name": "Subcontractor Management",
+      "description": "Manage subcontractors and their work",
+      "isEnabled": false
+    }
+  ]
+}

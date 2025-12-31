@@ -1,0 +1,1067 @@
+// CRM SaaS Database Schema
+// Industry-Configurable Multi-Tenant CRM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum ContactStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  CUSTOMER
+  FORMER_CUSTOMER
+}
+
+enum AccountType {
+  PROSPECT
+  CUSTOMER
+  PARTNER
+  VENDOR
+  COMPETITOR
+}
+
+enum OpportunityStatus {
+  OPEN
+  WON
+  LOST
+}
+
+enum ActivityStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PipelineType {
+  SALES
+  SERVICE
+  PROJECT
+  SUPPORT
+  ONBOARDING
+  RENEWAL
+  CUSTOM
+}
+
+enum ActivityCategory {
+  CALL
+  EMAIL
+  MEETING
+  SITE_VISIT
+  INSPECTION
+  ESTIMATE
+  PRESENTATION
+  FOLLOW_UP
+  TASK
+  NOTE
+  DOCUMENT
+  CUSTOM
+}
+
+enum CustomFieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DECIMAL
+  CURRENCY
+  DATE
+  DATETIME
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+  EMAIL
+  PHONE
+  URL
+  ADDRESS
+  FILE
+  IMAGE
+  USER_REFERENCE
+  ENTITY_REFERENCE
+  FORMULA
+  ROLLUP
+}
+
+enum CRMEntityType {
+  CONTACT
+  ACCOUNT
+  OPPORTUNITY
+  ACTIVITY
+  PROJECT
+  INVOICE
+  PRODUCT
+  SERVICE
+}
+
+enum DocumentTemplateType {
+  PROPOSAL
+  CONTRACT
+  ESTIMATE
+  INVOICE
+  QUOTE
+  WORK_ORDER
+  WARRANTY
+  CERTIFICATE
+  CHECKLIST
+  REPORT
+  LETTER
+  AGREEMENT
+}
+
+enum IntegrationType {
+  WEATHER
+  AERIAL_IMAGERY
+  MATERIAL_SUPPLIER
+  PAYMENT_GATEWAY
+  ACCOUNTING
+  EMAIL_MARKETING
+  SMS_MESSAGING
+  CALENDAR
+  MAP_LOCATION
+  CREDIT_CHECK
+  LICENSING
+  INDUSTRY_DATA
+  CUSTOM
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAUSED
+}
+
+enum IndustryTemplate {
+  PROJECT_BASED
+  SALES_FOCUSED
+  SERVICE_BASED
+  INVENTORY_BASED
+  ASSET_BASED
+  MEMBERSHIP_BASED
+  HOSPITALITY_BASED
+  CASE_BASED
+}
+
+// ============================================================================
+// MULTI-TENANT FOUNDATION
+// ============================================================================
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?  @unique
+  logo        String?
+
+  // Industry Configuration
+  industryTemplate IndustryTemplate?
+  naicsCode        String?           // Primary NAICS code
+  naicsCodes       String[]          // All applicable NAICS codes
+
+  // Settings
+  settings         Json    @default("{}")
+  timezone         String  @default("America/New_York")
+  currency         String  @default("USD")
+  locale           String  @default("en-US")
+
+  // Subscription
+  subscriptionStatus SubscriptionStatus @default(TRIAL)
+  trialEndsAt        DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users               User[]
+  contacts            CRMContact[]
+  accounts            CRMAccount[]
+  opportunities       CRMOpportunity[]
+  activities          CRMActivity[]
+  pipelines           CRMPipeline[]
+  features            TenantFeature[]
+  modules             TenantModule[]
+  customFields        TenantCustomField[]
+  customFieldValues   TenantCustomFieldValue[]
+  documentTemplates   TenantDocumentTemplate[]
+  integrations        TenantIntegration[]
+
+  // Industry Modules (Construction example)
+  jobs                Job[]
+  crews               Crew[]
+  materials           Material[]
+
+  @@index([naicsCode])
+  @@index([industryTemplate])
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id            String   @id @default(cuid())
+  tenantId      String
+
+  email         String
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+
+  role          UserRole @default(MEMBER)
+  isActive      Boolean  @default(true)
+  emailVerified Boolean  @default(false)
+
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // CRM Relations
+  assignedActivities  CRMActivity[]  @relation("AssignedTo")
+  createdActivities   CRMActivity[]  @relation("CreatedBy")
+  assignedOpportunities CRMOpportunity[] @relation("AssignedTo")
+  createdContacts     CRMContact[]   @relation("CreatedBy")
+
+  // Refresh tokens
+  refreshTokens RefreshToken[]
+
+  @@unique([tenantId, email])
+  @@index([email])
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ============================================================================
+// CRM CORE MODELS
+// ============================================================================
+
+model CRMContact {
+  id           String   @id @default(cuid())
+  tenantId     String
+
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  mobile       String?
+  title        String?
+  department   String?
+
+  // Address
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String? @default("US")
+
+  // Social
+  linkedIn     String?
+  twitter      String?
+
+  accountId    String?
+  ownerId      String?
+  source       String?
+  status       ContactStatus @default(ACTIVE)
+
+  // Custom fields stored as JSON
+  customFields Json     @default("{}")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdById  String?
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  account      CRMAccount? @relation(fields: [accountId], references: [id])
+  createdBy    User?     @relation("CreatedBy", fields: [createdById], references: [id])
+
+  activities   CRMActivity[]
+  opportunities CRMOpportunity[]
+
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([email])
+  @@index([status])
+}
+
+model CRMAccount {
+  id            String   @id @default(cuid())
+  tenantId      String
+
+  name          String
+  website       String?
+  industry      String?
+  employeeCount String?
+  annualRevenue Decimal? @db.Decimal(15, 2)
+  description   String?  @db.Text
+
+  // Address
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?  @default("US")
+
+  // Contact info
+  phone         String?
+  fax           String?
+
+  accountType   AccountType @default(PROSPECT)
+  parentId      String?     // For account hierarchies
+
+  customFields  Json     @default("{}")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent        CRMAccount? @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children      CRMAccount[] @relation("AccountHierarchy")
+
+  contacts      CRMContact[]
+  opportunities CRMOpportunity[]
+  activities    CRMActivity[]
+  jobs          Job[]
+
+  @@index([tenantId])
+  @@index([accountType])
+  @@index([parentId])
+}
+
+model CRMOpportunity {
+  id                String   @id @default(cuid())
+  tenantId          String
+
+  name              String
+  description       String?  @db.Text
+  amount            Decimal? @db.Decimal(15, 2)
+  probability       Int?     @default(0)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+
+  pipelineId        String
+  stageId           String
+  accountId         String?
+  primaryContactId  String?
+  assignedToId      String?
+
+  status            OpportunityStatus @default(OPEN)
+  lostReason        String?
+  wonReason         String?
+
+  customFields      Json     @default("{}")
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pipeline          CRMPipeline       @relation(fields: [pipelineId], references: [id])
+  stage             CRMPipelineStage  @relation(fields: [stageId], references: [id])
+  account           CRMAccount?       @relation(fields: [accountId], references: [id])
+  primaryContact    CRMContact?       @relation(fields: [primaryContactId], references: [id])
+  assignedTo        User?             @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  activities        CRMActivity[]
+  jobs              Job[]
+
+  @@index([tenantId])
+  @@index([pipelineId])
+  @@index([stageId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model CRMActivity {
+  id              String   @id @default(cuid())
+  tenantId        String
+
+  activityTypeKey String
+  subject         String
+  description     String?  @db.Text
+
+  scheduledAt     DateTime?
+  dueAt           DateTime?
+  completedAt     DateTime?
+  durationMinutes Int?
+
+  // Location (for site visits, inspections)
+  locationName    String?
+  addressLine1    String?
+  addressLine2    String?
+  city            String?
+  state           String?
+  postalCode      String?
+  latitude        Decimal? @db.Decimal(10, 8)
+  longitude       Decimal? @db.Decimal(11, 8)
+
+  // Relations
+  contactId       String?
+  accountId       String?
+  opportunityId   String?
+  assignedToId    String?
+  createdById     String?
+
+  status          ActivityStatus @default(SCHEDULED)
+  priority        Int            @default(0)
+
+  customFields    Json     @default("{}")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact         CRMContact?    @relation(fields: [contactId], references: [id])
+  account         CRMAccount?    @relation(fields: [accountId], references: [id])
+  opportunity     CRMOpportunity? @relation(fields: [opportunityId], references: [id])
+  assignedTo      User?          @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdBy       User?          @relation("CreatedBy", fields: [createdById], references: [id])
+
+  @@index([tenantId])
+  @@index([activityTypeKey])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([assignedToId])
+}
+
+// ============================================================================
+// PIPELINE & STAGES
+// ============================================================================
+
+model CRMPipeline {
+  id             String   @id @default(cuid())
+  tenantId       String
+
+  name           String
+  description    String?
+  pipelineType   PipelineType
+  isDefault      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+
+  // Source configuration ID (for tracking origin)
+  sourceConfigId String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stages         CRMPipelineStage[]
+  opportunities  CRMOpportunity[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([pipelineType])
+}
+
+model CRMPipelineStage {
+  id            String   @id @default(cuid())
+  pipelineId    String
+
+  name          String
+  description   String?
+  sortOrder     Int
+  color         String?  @default("#6366f1")
+  probability   Int?     @default(0)
+
+  isInitial     Boolean  @default(false)
+  isFinal       Boolean  @default(false)
+  isWon         Boolean  @default(false)
+  isLost        Boolean  @default(false)
+
+  // Automation triggers
+  autoActions   Json?
+
+  // Required fields to move to this stage
+  requiredFields String[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pipeline      CRMPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  opportunities CRMOpportunity[]
+
+  @@unique([pipelineId, name])
+  @@index([pipelineId])
+  @@index([sortOrder])
+}
+
+// ============================================================================
+// FEATURE TOGGLES & CUSTOMIZATION
+// ============================================================================
+
+model TenantFeature {
+  id        String   @id @default(cuid())
+  tenantId  String
+
+  featureKey String    // "contacts", "job_costing", "email_integration"
+  enabled    Boolean   @default(false)
+  config     Json?     // Feature-specific settings
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, featureKey])
+  @@index([tenantId])
+  @@index([featureKey])
+}
+
+model TenantModule {
+  id        String   @id @default(cuid())
+  tenantId  String
+
+  moduleKey String    // "job_costing", "crew_scheduling"
+  enabled   Boolean   @default(false)
+  config    Json?     // Module-specific settings
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, moduleKey])
+  @@index([tenantId])
+  @@index([moduleKey])
+}
+
+model TenantCustomField {
+  id         String   @id @default(cuid())
+  tenantId   String
+
+  fieldKey   String
+  label      String
+  description String?
+  fieldType  CustomFieldType
+  entityType CRMEntityType
+
+  options    Json?           // For select/multi-select
+  validation Json?           // Validation rules
+
+  isRequired   Boolean @default(false)
+  isSearchable Boolean @default(false)
+  isFilterable Boolean @default(false)
+
+  defaultValue String?
+  placeholder  String?
+  helpText     String?
+  groupName    String?
+
+  sortOrder    Int     @default(0)
+  isActive     Boolean @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values       TenantCustomFieldValue[]
+
+  @@unique([tenantId, fieldKey, entityType])
+  @@index([tenantId])
+  @@index([entityType])
+}
+
+model TenantCustomFieldValue {
+  id            String   @id @default(cuid())
+  tenantId      String
+  customFieldId String
+
+  entityType    CRMEntityType
+  entityId      String
+
+  value         Json
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customField   TenantCustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([customFieldId, entityId])
+  @@index([tenantId])
+  @@index([entityType, entityId])
+}
+
+// ============================================================================
+// DOCUMENT TEMPLATES
+// ============================================================================
+
+model TenantDocumentTemplate {
+  id              String   @id @default(cuid())
+  tenantId        String
+
+  templateKey     String
+  name            String
+  description     String?
+  templateType    DocumentTemplateType
+
+  templateContent String   @db.Text
+  templateFormat  String   @default("html")
+
+  // Available merge fields
+  availableVariables Json
+
+  category        String?
+  isDefault       Boolean  @default(false)
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, templateKey])
+  @@index([tenantId])
+  @@index([templateType])
+}
+
+// ============================================================================
+// INTEGRATIONS
+// ============================================================================
+
+model TenantIntegration {
+  id              String   @id @default(cuid())
+  tenantId        String
+
+  integrationKey  String
+  name            String
+  integrationType IntegrationType
+  provider        String?
+
+  isEnabled       Boolean  @default(false)
+  config          Json     @default("{}")
+  credentials     Json?    // Encrypted credentials
+
+  lastSyncAt      DateTime?
+  syncStatus      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, integrationKey])
+  @@index([tenantId])
+  @@index([integrationType])
+}
+
+// ============================================================================
+// INDUSTRY CONFIGURATION (Seed Data)
+// ============================================================================
+
+model IndustryConfiguration {
+  id          String   @id @default(cuid())
+
+  naicsCode   String?  @unique  // null = Universal
+  name        String
+  description String?
+  version     String   @default("1.0")
+
+  // Template this extends
+  extendsTemplate IndustryTemplate?
+
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pipelines        PipelineConfiguration[]
+  customFields     CustomFieldConfiguration[]
+  activityTypes    ActivityTypeConfiguration[]
+  documentTemplates DocumentTemplateConfiguration[]
+  integrations     IntegrationConfiguration[]
+  modules          IndustryModuleConfiguration[]
+}
+
+model PipelineConfiguration {
+  id            String   @id @default(cuid())
+  configId      String
+
+  name          String
+  description   String?
+  pipelineType  PipelineType
+  isDefault     Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  config        IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+  stages        PipelineStageConfiguration[]
+
+  @@index([configId])
+}
+
+model PipelineStageConfiguration {
+  id            String   @id @default(cuid())
+  pipelineId    String
+
+  name          String
+  description   String?
+  sortOrder     Int
+  color         String?
+  probability   Int?
+
+  isInitial     Boolean  @default(false)
+  isFinal       Boolean  @default(false)
+  isWon         Boolean  @default(false)
+  isLost        Boolean  @default(false)
+
+  autoActions   Json?
+  requiredFields String[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pipeline      PipelineConfiguration @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@index([pipelineId])
+}
+
+model CustomFieldConfiguration {
+  id            String   @id @default(cuid())
+  configId      String
+
+  fieldKey      String
+  label         String
+  description   String?
+  fieldType     CustomFieldType
+  entityType    CRMEntityType
+
+  isRequired    Boolean  @default(false)
+  isSearchable  Boolean  @default(false)
+  isFilterable  Boolean  @default(false)
+
+  defaultValue  String?
+  placeholder   String?
+  helpText      String?
+  validation    Json?
+
+  sortOrder     Int      @default(0)
+  groupName     String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  config        IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+  options       CustomFieldOption[]
+
+  @@index([configId])
+}
+
+model CustomFieldOption {
+  id        String   @id @default(cuid())
+  fieldId   String
+
+  value     String
+  label     String
+  color     String?
+  icon      String?
+  sortOrder Int      @default(0)
+  isDefault Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  field     CustomFieldConfiguration @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId])
+}
+
+model ActivityTypeConfiguration {
+  id              String   @id @default(cuid())
+  configId        String
+
+  activityKey     String
+  name            String
+  description     String?
+  icon            String?
+  color           String?
+  category        ActivityCategory
+
+  durationDefault Int?
+  isSchedulable   Boolean  @default(true)
+  isLoggable      Boolean  @default(true)
+  requiresLocation Boolean @default(false)
+
+  requiredCustomFields String[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  config          IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+}
+
+model DocumentTemplateConfiguration {
+  id              String   @id @default(cuid())
+  configId        String
+
+  templateKey     String
+  name            String
+  description     String?
+  templateType    DocumentTemplateType
+
+  templateContent String   @db.Text
+  templateFormat  String   @default("html")
+
+  availableVariables Json
+  category        String?
+  isDefault       Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  config          IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+}
+
+model IntegrationConfiguration {
+  id              String   @id @default(cuid())
+  configId        String
+
+  integrationKey  String
+  name            String
+  description     String?
+  integrationType IntegrationType
+  provider        String?
+
+  configSchema    Json
+  defaultConfig   Json?
+  requiredScopes  String[]
+
+  isOptional      Boolean  @default(true)
+  isPremium       Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  config          IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+}
+
+model IndustryModuleConfiguration {
+  id            String   @id @default(cuid())
+  configId      String
+
+  moduleKey     String
+  name          String
+  description   String?
+
+  isEnabled     Boolean  @default(true)
+  isRequired    Boolean  @default(false)
+
+  configSchema  Json?
+  defaultConfig Json?
+  routeBase     String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  config        IndustryConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+}
+
+// ============================================================================
+// CONSTRUCTION INDUSTRY MODULES (Example Implementation)
+// ============================================================================
+
+model Job {
+  id            String   @id @default(cuid())
+  tenantId      String
+
+  jobNumber     String
+  name          String
+  description   String?  @db.Text
+
+  // Links
+  opportunityId String?
+  accountId     String?
+
+  // Job details
+  jobType       String?
+  status        String   @default("planning")
+  priority      Int      @default(0)
+
+  // Dates
+  estimatedStartDate DateTime?
+  estimatedEndDate   DateTime?
+  actualStartDate    DateTime?
+  actualEndDate      DateTime?
+
+  // Location
+  siteAddress   String?
+  siteCity      String?
+  siteState     String?
+  sitePostalCode String?
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+
+  // Financials
+  estimatedCost   Decimal? @db.Decimal(15, 2)
+  actualCost      Decimal? @db.Decimal(15, 2)
+  contractAmount  Decimal? @db.Decimal(15, 2)
+
+  customFields    Json     @default("{}")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  opportunity     CRMOpportunity? @relation(fields: [opportunityId], references: [id])
+  account         CRMAccount?     @relation(fields: [accountId], references: [id])
+
+  crewAssignments JobCrewAssignment[]
+  materialOrders  JobMaterialOrder[]
+
+  @@unique([tenantId, jobNumber])
+  @@index([tenantId])
+  @@index([status])
+  @@index([opportunityId])
+}
+
+model Crew {
+  id          String   @id @default(cuid())
+  tenantId    String
+
+  name        String
+  description String?
+  leaderId    String?
+
+  // Crew details
+  crewType    String?
+  size        Int      @default(1)
+  hourlyRate  Decimal? @db.Decimal(10, 2)
+
+  isActive    Boolean  @default(true)
+
+  customFields Json    @default("{}")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  jobAssignments JobCrewAssignment[]
+
+  @@index([tenantId])
+  @@index([isActive])
+}
+
+model JobCrewAssignment {
+  id          String   @id @default(cuid())
+  jobId       String
+  crewId      String
+
+  startDate   DateTime
+  endDate     DateTime?
+  hoursWorked Decimal? @db.Decimal(10, 2)
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  crew        Crew     @relation(fields: [crewId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([crewId])
+}
+
+model Material {
+  id            String   @id @default(cuid())
+  tenantId      String
+
+  sku           String?
+  name          String
+  description   String?
+  category      String?
+  unit          String?  @default("each")
+
+  unitCost      Decimal? @db.Decimal(10, 2)
+  markup        Decimal? @db.Decimal(5, 2)
+
+  // Inventory
+  stockQuantity Decimal  @default(0) @db.Decimal(15, 3)
+  reorderPoint  Decimal? @db.Decimal(15, 3)
+
+  supplierId    String?
+  supplierSku   String?
+
+  isActive      Boolean  @default(true)
+
+  customFields  Json     @default("{}")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  jobOrders     JobMaterialOrder[]
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+  @@index([category])
+}
+
+model JobMaterialOrder {
+  id          String   @id @default(cuid())
+  jobId       String
+  materialId  String
+
+  quantity    Decimal  @db.Decimal(15, 3)
+  unitCost    Decimal  @db.Decimal(10, 2)
+  totalCost   Decimal  @db.Decimal(15, 2)
+
+  status      String   @default("pending")
+  orderedAt   DateTime?
+  receivedAt  DateTime?
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  material    Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([materialId])
+  @@index([status])
+}

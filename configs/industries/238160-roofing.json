@@ -1,0 +1,292 @@
+{
+  "naicsCode": "238160",
+  "name": "Roofing Contractors Configuration",
+  "description": "Specialized configuration for roofing contractors",
+  "version": "1.0",
+  "extendsTemplate": "PROJECT_BASED",
+  "customFields": [
+    {
+      "fieldKey": "roof_type",
+      "label": "Roof Type",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "isRequired": true,
+      "isFilterable": true,
+      "sortOrder": 1,
+      "options": [
+        { "value": "asphalt_shingle", "label": "Asphalt Shingle" },
+        { "value": "metal", "label": "Metal" },
+        { "value": "tile", "label": "Tile" },
+        { "value": "slate", "label": "Slate" },
+        { "value": "flat_membrane", "label": "Flat/Membrane" },
+        { "value": "cedar_shake", "label": "Cedar Shake" },
+        { "value": "synthetic", "label": "Synthetic" },
+        { "value": "tpo", "label": "TPO" },
+        { "value": "epdm", "label": "EPDM" },
+        { "value": "built_up", "label": "Built-Up (BUR)" }
+      ]
+    },
+    {
+      "fieldKey": "square_footage",
+      "label": "Roof Square Footage",
+      "fieldType": "NUMBER",
+      "entityType": "OPPORTUNITY",
+      "isRequired": true,
+      "sortOrder": 2,
+      "helpText": "Total roof area in square feet"
+    },
+    {
+      "fieldKey": "roof_squares",
+      "label": "Roof Squares",
+      "fieldType": "DECIMAL",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 3,
+      "helpText": "1 square = 100 sq ft"
+    },
+    {
+      "fieldKey": "roof_pitch",
+      "label": "Roof Pitch",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "isFilterable": true,
+      "sortOrder": 4,
+      "options": [
+        { "value": "flat", "label": "Flat (0-2/12)" },
+        { "value": "low", "label": "Low Slope (3-4/12)" },
+        { "value": "medium", "label": "Medium Slope (5-8/12)" },
+        { "value": "steep", "label": "Steep (9-12/12)" },
+        { "value": "very_steep", "label": "Very Steep (12+/12)" }
+      ]
+    },
+    {
+      "fieldKey": "number_of_layers",
+      "label": "Existing Layers",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 5,
+      "options": [
+        { "value": "1", "label": "1 Layer" },
+        { "value": "2", "label": "2 Layers" },
+        { "value": "3", "label": "3+ Layers" }
+      ]
+    },
+    {
+      "fieldKey": "tear_off_required",
+      "label": "Tear-Off Required",
+      "fieldType": "BOOLEAN",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 6
+    },
+    {
+      "fieldKey": "damage_type",
+      "label": "Damage Type",
+      "fieldType": "MULTI_SELECT",
+      "entityType": "OPPORTUNITY",
+      "isFilterable": true,
+      "sortOrder": 7,
+      "options": [
+        { "value": "storm", "label": "Storm" },
+        { "value": "hail", "label": "Hail" },
+        { "value": "wind", "label": "Wind" },
+        { "value": "age", "label": "Age/Wear" },
+        { "value": "leak", "label": "Active Leak" },
+        { "value": "tree", "label": "Tree Damage" },
+        { "value": "ice_dam", "label": "Ice Dam" }
+      ]
+    },
+    {
+      "fieldKey": "insurance_claim",
+      "label": "Insurance Claim",
+      "fieldType": "BOOLEAN",
+      "entityType": "OPPORTUNITY",
+      "isFilterable": true,
+      "sortOrder": 8
+    },
+    {
+      "fieldKey": "insurance_company",
+      "label": "Insurance Company",
+      "fieldType": "TEXT",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 9
+    },
+    {
+      "fieldKey": "claim_number",
+      "label": "Claim Number",
+      "fieldType": "TEXT",
+      "entityType": "OPPORTUNITY",
+      "isSearchable": true,
+      "sortOrder": 10
+    },
+    {
+      "fieldKey": "adjuster_name",
+      "label": "Adjuster Name",
+      "fieldType": "TEXT",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 11
+    },
+    {
+      "fieldKey": "adjuster_phone",
+      "label": "Adjuster Phone",
+      "fieldType": "PHONE",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 12
+    },
+    {
+      "fieldKey": "deductible",
+      "label": "Deductible",
+      "fieldType": "CURRENCY",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 13
+    },
+    {
+      "fieldKey": "warranty_type",
+      "label": "Warranty Type",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 14,
+      "options": [
+        { "value": "manufacturer", "label": "Manufacturer Only" },
+        { "value": "workmanship_5", "label": "5-Year Workmanship" },
+        { "value": "workmanship_10", "label": "10-Year Workmanship" },
+        { "value": "extended", "label": "Extended Warranty" }
+      ]
+    },
+    {
+      "fieldKey": "ventilation_upgrade",
+      "label": "Ventilation Upgrade",
+      "fieldType": "BOOLEAN",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 15
+    },
+    {
+      "fieldKey": "gutter_work",
+      "label": "Gutter Work",
+      "fieldType": "SELECT",
+      "entityType": "OPPORTUNITY",
+      "sortOrder": 16,
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "repair", "label": "Repair" },
+        { "value": "replace", "label": "Replace" },
+        { "value": "guards", "label": "Add Guards" }
+      ]
+    }
+  ],
+  "activityTypes": [
+    {
+      "activityKey": "roof_inspection",
+      "name": "Roof Inspection",
+      "category": "INSPECTION",
+      "durationDefault": 60,
+      "requiresLocation": true,
+      "icon": "search",
+      "color": "#3b82f6"
+    },
+    {
+      "activityKey": "aerial_measurement",
+      "name": "Aerial Measurement",
+      "category": "INSPECTION",
+      "durationDefault": 30,
+      "icon": "satellite",
+      "color": "#8b5cf6"
+    },
+    {
+      "activityKey": "storm_damage_assessment",
+      "name": "Storm Damage Assessment",
+      "category": "INSPECTION",
+      "durationDefault": 90,
+      "requiresLocation": true,
+      "icon": "cloud-lightning",
+      "color": "#f59e0b"
+    },
+    {
+      "activityKey": "insurance_adjuster_meeting",
+      "name": "Insurance Adjuster Meeting",
+      "category": "MEETING",
+      "durationDefault": 120,
+      "requiresLocation": true,
+      "icon": "briefcase",
+      "color": "#22c55e"
+    },
+    {
+      "activityKey": "material_order",
+      "name": "Material Order",
+      "category": "TASK",
+      "durationDefault": 30,
+      "icon": "package",
+      "color": "#6366f1"
+    },
+    {
+      "activityKey": "crew_dispatch",
+      "name": "Crew Dispatch",
+      "category": "TASK",
+      "durationDefault": 15,
+      "icon": "users",
+      "color": "#ec4899"
+    }
+  ],
+  "documentTemplates": [
+    {
+      "templateKey": "roofing_proposal",
+      "name": "Roofing Proposal",
+      "templateType": "PROPOSAL",
+      "isDefault": true
+    },
+    {
+      "templateKey": "roofing_contract",
+      "name": "Roofing Contract",
+      "templateType": "CONTRACT"
+    },
+    {
+      "templateKey": "insurance_scope",
+      "name": "Insurance Scope of Work",
+      "templateType": "ESTIMATE"
+    },
+    {
+      "templateKey": "warranty_certificate",
+      "name": "Roofing Warranty Certificate",
+      "templateType": "WARRANTY"
+    },
+    {
+      "templateKey": "final_inspection_checklist",
+      "name": "Final Inspection Checklist",
+      "templateType": "CHECKLIST"
+    }
+  ],
+  "integrations": [
+    {
+      "integrationKey": "aerial_imagery",
+      "name": "Aerial Imagery",
+      "integrationType": "AERIAL_IMAGERY",
+      "provider": "eagleview",
+      "isPremium": true,
+      "description": "Get satellite roof measurements and imagery"
+    },
+    {
+      "integrationKey": "roofing_suppliers",
+      "name": "Roofing Suppliers",
+      "integrationType": "MATERIAL_SUPPLIER",
+      "description": "Order materials from roofing suppliers"
+    },
+    {
+      "integrationKey": "storm_tracking",
+      "name": "Storm Tracking",
+      "integrationType": "WEATHER",
+      "description": "Track storms for damage assessment opportunities"
+    }
+  ],
+  "modules": [
+    {
+      "moduleKey": "roof_measurements",
+      "name": "Roof Measurements",
+      "description": "Store and calculate roof measurements",
+      "isEnabled": true
+    },
+    {
+      "moduleKey": "insurance_claims",
+      "name": "Insurance Claims",
+      "description": "Track insurance claim progress",
+      "isEnabled": true
+    }
+  ]
+}

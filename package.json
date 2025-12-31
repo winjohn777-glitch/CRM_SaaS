@@ -1,0 +1,46 @@
+{
+  "name": "crm-saas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Industry-Configurable CRM SaaS Platform - Universal CRM foundation that auto-configures based on NAICS classification",
+  "keywords": [
+    "crm",
+    "saas",
+    "naics",
+    "industry-specific",
+    "multi-tenant"
+  ],
+  "license": "MIT",
+  "author": "CRM SaaS Team",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "turbo run db:generate --filter=@crm/db",
+    "db:push": "turbo run db:push --filter=@crm/db",
+    "db:migrate": "turbo run db:migrate --filter=@crm/db",
+    "db:seed": "turbo run db:seed --filter=@crm/db",
+    "db:studio": "turbo run db:studio --filter=@crm/db",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
