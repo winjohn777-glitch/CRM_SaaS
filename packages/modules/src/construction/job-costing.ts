@@ -151,12 +151,12 @@ export class JobCostingModule extends BaseModule {
     },
   ];
 
-  async onActivate(context: ModuleContext): Promise<void> {
+  override async onActivate(context: ModuleContext): Promise<void> {
     // Initialize job costing for tenant
     console.log(`Job Costing module activated for tenant ${context.tenantId}`);
   }
 
-  async onDeactivate(context: ModuleContext): Promise<void> {
+  override async onDeactivate(context: ModuleContext): Promise<void> {
     // Cleanup if needed
     console.log(`Job Costing module deactivated for tenant ${context.tenantId}`);
   }

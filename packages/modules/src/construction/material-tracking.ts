@@ -183,11 +183,11 @@ export class MaterialTrackingModule extends BaseModule {
     },
   ];
 
-  async onActivate(context: ModuleContext): Promise<void> {
+  override async onActivate(context: ModuleContext): Promise<void> {
     console.log(`Material Tracking module activated for tenant ${context.tenantId}`);
   }
 
-  async onDeactivate(context: ModuleContext): Promise<void> {
+  override async onDeactivate(context: ModuleContext): Promise<void> {
     console.log(`Material Tracking module deactivated for tenant ${context.tenantId}`);
   }
 }

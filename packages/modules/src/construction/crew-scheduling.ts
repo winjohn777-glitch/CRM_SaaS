@@ -156,11 +156,11 @@ export class CrewSchedulingModule extends BaseModule {
     },
   ];
 
-  async onActivate(context: ModuleContext): Promise<void> {
+  override async onActivate(context: ModuleContext): Promise<void> {
     console.log(`Crew Scheduling module activated for tenant ${context.tenantId}`);
   }
 
-  async onDeactivate(context: ModuleContext): Promise<void> {
+  override async onDeactivate(context: ModuleContext): Promise<void> {
     console.log(`Crew Scheduling module deactivated for tenant ${context.tenantId}`);
   }
 }
